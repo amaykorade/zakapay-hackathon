@@ -120,7 +120,70 @@ async function handleCheckoutCompleted(session) {
 
 async function handlePaymentSucceeded(paymentIntent) {
   console.log('Payment succeeded:', paymentIntent.id);
-  // Additional logic if needed
+  
+  // Check if this is part of a multi-card payment
+  const allocationId = paymentIntent.metadata?.allocationId;
+  if (allocationId) {
+    // Update the specific allocation
+    await prisma.paymentAllocation.update({
+      where: { id: allocationId },
+      data: {
+        status: 'SUCCEEDED',
+        providerRef: paymentIntent.id
+      }
+    });
+
+    // Check if all allocations for this payment are completed
+    const parentPaymentId = paymentIntent.metadata?.paymentId;
+    if (parentPaymentId) {
+      const remainingAllocations = await prisma.paymentAllocation.count({
+        where: {
+          paymentId: parentPaymentId,
+          status: 'PENDING'
+        }
+      });
+
+      if (remainingAllocations === 0) {
+        // All allocations completed, update parent payment and payer status
+        await prisma.payment.update({
+          where: { id: parentPaymentId },
+          data: { status: 'SUCCEEDED' }
+        });
+
+        const parentPayment = await prisma.payment.findUnique({
+          where: { id: parentPaymentId },
+          include: { payer: true }
+        });
+
+        if (parentPayment) {
+          await prisma.payer.update({
+            where: { id: parentPayment.payerId },
+            data: { status: 'PAID' }
+          });
+
+          // Update collection status
+          const unpaidPayers = await prisma.payer.count({
+            where: {
+              collectionId: parentPayment.collectionId,
+              status: 'UNPAID'
+            }
+          });
+
+          if (unpaidPayers === 0) {
+            await prisma.collection.update({
+              where: { id: parentPayment.collectionId },
+              data: { status: 'COMPLETED' }
+            });
+          } else {
+            await prisma.collection.update({
+              where: { id: parentPayment.collectionId },
+              data: { status: 'PARTIAL' }
+            });
+          }
+        }
+      }
+    }
+  }
 }
 
 async function handlePaymentFailed(paymentIntent) {

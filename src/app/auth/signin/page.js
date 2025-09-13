@@ -46,7 +46,7 @@ export default function SignIn() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-gray-800 to-gray-600 rounded-2xl flex items-center justify-center">
               <span className="text-white font-bold text-2xl">Z</span>
             </div>
           </div>
@@ -74,7 +74,7 @@ export default function SignIn() {
             <button
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="w-full flex justify-center items-center px-4 py-3 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full flex justify-center items-center px-4 py-3 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600"></div>
@@ -94,11 +94,11 @@ export default function SignIn() {
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 By signing in, you agree to our{' '}
-                <Link href="/terms" className="text-blue-600 hover:text-blue-500">
+                <Link href="/terms" className="text-gray-800 hover:text-gray-900">
                   Terms of Service
                 </Link>{' '}
                 and{' '}
-                <Link href="/privacy" className="text-blue-600 hover:text-blue-500">
+                <Link href="/privacy" className="text-gray-800 hover:text-gray-900">
                   Privacy Policy
                 </Link>
               </p>
@@ -118,9 +118,9 @@ export default function SignIn() {
         </div>
 
         <div className="text-center">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-blue-900 mb-2">Why sign in?</h3>
-            <ul className="text-xs text-blue-800 space-y-1">
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Why sign in?</h3>
+            <ul className="text-xs text-gray-800 space-y-1">
               <li>• Save and manage your payment collections</li>
               <li>• Get notified when payments are completed</li>
               <li>• Access your payment history anytime</li>

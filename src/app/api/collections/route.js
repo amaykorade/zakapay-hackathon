@@ -64,7 +64,17 @@ export async function GET() {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { title, totalAmount, numPayers, payerNames = [], payerEmails = [], creatorEmail } = body || {};
+    const { 
+      title, 
+      totalAmount, 
+      numPayers, 
+      payerNames = [], 
+      payerEmails = [], 
+      creatorEmail,
+      paymentMode = 'split',
+      allocations = {},
+      paymentMethods = []
+    } = body || {};
 
     if (!title || !totalAmount || !numPayers) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -104,24 +114,94 @@ export async function POST(req) {
       },
     });
 
-    // Create payers
-    const payersData = await Promise.all(
-      Array.from({ length: n }).map(async (_, i) => {
-        const share = baseShare + (i < remainder ? 1 : 0);
-        const name = payerNames[i] || `Payer ${i + 1}`;
-        const email = payerEmails[i] || null;
-        const slug = await createUniquePayerSlug();
-        return {
-          name,
-          email,
-          shareAmount: share,
-          payLinkSlug: slug,
-          collectionId: created.id,
-        };
-      })
-    );
+    let payersData = [];
 
-    await prisma.payer.createMany({ data: payersData });
+    if (paymentMode === 'self-pay') {
+      // For self-pay mode, create a single payer (the creator) with the full amount
+      const slug = await createUniquePayerSlug();
+      payersData = [{
+        name: creator?.name || 'Self Payment',
+        email: creator?.email || creatorEmail,
+        shareAmount: totalPaise,
+        payLinkSlug: slug,
+        collectionId: created.id,
+      }];
+
+      // Create the payer
+      await prisma.payer.createMany({ data: payersData });
+
+      // Create multi-card payment if allocations are provided
+      if (Object.keys(allocations).length > 0) {
+        const payer = await prisma.payer.findFirst({ where: { collectionId: created.id } });
+        
+        // Create parent payment record
+        const parentPayment = await prisma.payment.create({
+          data: {
+            provider: 'multi-card',
+            amount: totalPaise,
+            status: 'PENDING',
+            payerId: payer.id,
+            collectionId: created.id,
+            isMultiCard: true,
+          }
+        });
+
+        // Create payment allocations
+        for (const [methodId, amount] of Object.entries(allocations)) {
+          if (amount > 0) {
+            const method = paymentMethods.find(m => m.id === methodId);
+            if (method) {
+              // Create or find payment method
+              let paymentMethod = await prisma.paymentMethod.findFirst({
+                where: {
+                  name: method.name,
+                  provider: method.provider
+                }
+              });
+
+              if (!paymentMethod) {
+                paymentMethod = await prisma.paymentMethod.create({
+                  data: {
+                    name: method.name,
+                    type: method.type,
+                    provider: method.provider,
+                  }
+                });
+              }
+
+              // Create payment allocation
+              await prisma.paymentAllocation.create({
+                data: {
+                  paymentId: parentPayment.id,
+                  paymentMethodId: paymentMethod.id,
+                  amount: Math.round(amount * 100), // Convert to paise
+                  status: 'PENDING',
+                }
+              });
+            }
+          }
+        }
+      }
+    } else {
+      // Regular split payment mode
+      payersData = await Promise.all(
+        Array.from({ length: n }).map(async (_, i) => {
+          const share = baseShare + (i < remainder ? 1 : 0);
+          const name = payerNames[i] || `Payer ${i + 1}`;
+          const email = payerEmails[i] || null;
+          const slug = await createUniquePayerSlug();
+          return {
+            name,
+            email,
+            shareAmount: share,
+            payLinkSlug: slug,
+            collectionId: created.id,
+          };
+        })
+      );
+
+      await prisma.payer.createMany({ data: payersData });
+    }
 
     // Fetch the created payers
     const payers = await prisma.payer.findMany({ 

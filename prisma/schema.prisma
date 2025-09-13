@@ -94,6 +94,12 @@ model Payment {
   payerId       String
   collection    Collection @relation(fields: [collectionId], references: [id])
   collectionId  String
+  // Multi-card payment support
+  isMultiCard   Boolean    @default(false)
+  parentPaymentId String?  // For grouping multi-card payments
+  parentPayment Payment?   @relation("MultiCardPayments", fields: [parentPaymentId], references: [id])
+  childPayments Payment[]  @relation("MultiCardPayments")
+  paymentAllocations PaymentAllocation[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 }
@@ -109,6 +115,39 @@ enum PayerStatus {
   UNPAID
   PAID
   REFUNDED
+}
+
+model PaymentMethod {
+  id            String     @id @default(cuid())
+  name          String     // e.g., "American Express", "Visa", "PayPal", "Venmo"
+  type          PaymentMethodType
+  provider      String     // e.g., "stripe", "paypal", "venmo"
+  isActive      Boolean    @default(true)
+  paymentAllocations PaymentAllocation[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model PaymentAllocation {
+  id            String     @id @default(cuid())
+  payment       Payment    @relation(fields: [paymentId], references: [id])
+  paymentId     String
+  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  paymentMethodId String
+  amount        Int        // Amount allocated to this payment method (in paise)
+  status        PaymentStatus @default(PENDING)
+  providerRef   String?    // Gateway-specific reference for this allocation
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+enum PaymentMethodType {
+  CREDIT_CARD
+  DEBIT_CARD
+  DIGITAL_WALLET
+  BANK_TRANSFER
+  UPI
+  OTHER
 }
 
 enum PaymentStatus {

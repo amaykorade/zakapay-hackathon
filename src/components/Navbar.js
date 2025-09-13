@@ -15,7 +15,7 @@ export default function Navbar() {
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-gray-800 to-gray-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">Z</span>
               </div>
               <span className="text-xl font-bold text-gray-900">ZakaPay</span>
@@ -24,16 +24,16 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+            <Link href="/dashboard" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
               Dashboard
             </Link>
-            <Link href="/create" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+            <Link href="/create" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
               Create Payment
             </Link>
-            <Link href="/pricing" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+            <Link href="/pricing" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
               Pricing
             </Link>
-            <Link href="/help" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+            <Link href="/help" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
               Help
             </Link>
           </div>
@@ -44,13 +44,13 @@ export default function Navbar() {
               <div className="flex items-center space-x-4">
                 <Link
                   href="/dashboard"
-                  className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                  className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
                 >
                   Dashboard
                 </Link>
                 <Link
                   href="/create"
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="bg-gradient-to-r from-gray-800 to-gray-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-gray-900 hover:to-gray-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   Create Payment
                 </Link>
@@ -91,7 +91,7 @@ export default function Navbar() {
                 </button>
                 <Link
                   href="/create"
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="bg-gradient-to-r from-gray-800 to-gray-600 text-white px-6 py-2 rounded-lg font-semibold hover:from-gray-900 hover:to-gray-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   Get Started
                 </Link>
@@ -103,7 +103,7 @@ export default function Navbar() {
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-blue-600 focus:outline-none focus:text-blue-600"
+              className="text-gray-700 hover:text-gray-900 focus:outline-none focus:text-gray-900"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {isMenuOpen ? (
@@ -122,28 +122,28 @@ export default function Navbar() {
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-50 rounded-lg mt-2">
               <Link
                 href="/dashboard"
-                className="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium rounded-md hover:bg-gray-100"
+                className="block px-3 py-2 text-gray-700 hover:text-gray-900 font-medium rounded-md hover:bg-gray-100"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Dashboard
               </Link>
               <Link
                 href="/create"
-                className="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium rounded-md hover:bg-gray-100"
+                className="block px-3 py-2 text-gray-700 hover:text-gray-900 font-medium rounded-md hover:bg-gray-100"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Create Payment
               </Link>
               <Link
                 href="/pricing"
-                className="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium rounded-md hover:bg-gray-100"
+                className="block px-3 py-2 text-gray-700 hover:text-gray-900 font-medium rounded-md hover:bg-gray-100"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Pricing
               </Link>
               <Link
                 href="/help"
-                className="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium rounded-md hover:bg-gray-100"
+                className="block px-3 py-2 text-gray-700 hover:text-gray-900 font-medium rounded-md hover:bg-gray-100"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Help
@@ -153,14 +153,14 @@ export default function Navbar() {
                   <>
                     <Link
                       href="/dashboard"
-                      className="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium rounded-md hover:bg-gray-100"
+                      className="block px-3 py-2 text-gray-700 hover:text-gray-900 font-medium rounded-md hover:bg-gray-100"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Dashboard
                     </Link>
                     <Link
                       href="/create"
-                      className="block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-2 rounded-lg font-semibold text-center hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
+                      className="block w-full bg-gradient-to-r from-gray-800 to-gray-600 text-white px-3 py-2 rounded-lg font-semibold text-center hover:from-gray-900 hover:to-gray-700 transition-all duration-200"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Create Payment
@@ -211,7 +211,7 @@ export default function Navbar() {
                     </button>
                     <Link
                       href="/create"
-                      className="block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-2 rounded-lg font-semibold text-center hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
+                      className="block w-full bg-gradient-to-r from-gray-800 to-gray-600 text-white px-3 py-2 rounded-lg font-semibold text-center hover:from-gray-900 hover:to-gray-700 transition-all duration-200"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Get Started
