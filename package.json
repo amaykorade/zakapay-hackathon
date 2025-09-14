@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && next build",
+    "vercel-build": "rm -rf node_modules/.prisma node_modules/@prisma/client && prisma generate && next build",
     "build:vercel": "prisma generate && next build",
     "prebuild": "prisma generate",
     "prisma:generate": "prisma generate"

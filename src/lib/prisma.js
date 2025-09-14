@@ -10,6 +10,12 @@ export const prisma = globalForPrisma.prisma || new PrismaClient({
             url: process.env.DATABASE_URL,
         },
     },
+    // Add explicit configuration for Vercel
+    __internal: {
+        engine: {
+            binaryTargets: ["native", "rhel-openssl-1.0.x"],
+        },
+    },
 });
 
 if (process.env.NODE_ENV !== "production") {
