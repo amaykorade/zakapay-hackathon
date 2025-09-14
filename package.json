@@ -1,7 +1,15 @@
 {
   "name": "zakapay",
   "version": "0.1.0",
+  "description": "A modern split payment collection platform for collecting money from multiple people. Built with Next.js, Stripe, and Tailwind CSS.",
   "private": true,
+  "keywords": ["split-payments", "payment-collection", "nextjs", "stripe", "tailwind", "group-payments"],
+  "author": "Amay Korade",
+  "homepage": "https://zakapay-hackathon.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/amaykorade/zakapay-hackathon.git"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build --turbopack",

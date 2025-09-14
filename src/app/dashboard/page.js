@@ -102,6 +102,7 @@ export default function Dashboard() {
 
   // Collection Card Component
   const CollectionCard = ({ collection }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
     const paidCount = collection.links?.filter(l => l.status === 'PAID').length || 0;
     const totalCount = collection.numPayers;
     const progressPercentage = (paidCount / totalCount) * 100;
@@ -150,7 +151,7 @@ export default function Dashboard() {
         {/* Payment Links */}
         <div className="p-3">
           <div className="space-y-1.5">
-            {collection.links?.slice(0, 2).map((link, index) => (
+            {(isExpanded ? collection.links : collection.links?.slice(0, 2))?.map((link, index) => (
               <div key={index} className="flex items-center justify-between bg-gray-50 rounded-md p-2">
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-gray-900 truncate">{link.name}</p>
@@ -191,9 +192,20 @@ export default function Dashboard() {
               </div>
             ))}
             {collection.links?.length > 2 && (
-              <p className="text-xs text-gray-500 text-center py-1">
-                +{collection.links.length - 2} more
-              </p>
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="w-full text-xs text-blue-600 hover:text-blue-800 py-2 px-2 rounded-md hover:bg-blue-50 transition-colors flex items-center justify-center space-x-1"
+              >
+                <span>{isExpanded ? 'Show less' : `+${collection.links.length - 2} more`}</span>
+                <svg 
+                  className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
             )}
           </div>
         </div>
