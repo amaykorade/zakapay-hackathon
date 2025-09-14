@@ -596,7 +596,7 @@ export default function CreateCollection() {
                                    <div>
                                      <h5 className="text-sm font-medium text-blue-900">How Multi-Card Payment Works</h5>
                                      <p className="text-xs text-blue-700 mt-1">
-                                       You'll be redirected to secure payment pages for each card. No need to create accounts - just enter your card details when prompted.
+                                       You&apos;ll be redirected to secure payment pages for each card. No need to create accounts - just enter your card details when prompted.
                                      </p>
                                    </div>
                                  </div>

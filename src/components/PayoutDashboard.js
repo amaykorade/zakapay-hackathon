@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 
 export default function PayoutDashboard() {
@@ -15,9 +15,9 @@ export default function PayoutDashboard() {
     if (session?.user?.id) {
       fetchPayouts();
     }
-  }, [session]);
+  }, [session, fetchPayouts]);
 
-  const fetchPayouts = async () => {
+  const fetchPayouts = useCallback(async () => {
     try {
       const response = await fetch(`/api/payouts?userId=${session.user.id}`);
       const data = await response.json();
@@ -27,7 +27,7 @@ export default function PayoutDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session.user.id]);
 
   const handlePayout = async (payout) => {
     if (!payoutMethod || !payoutReference) {

@@ -53,7 +53,7 @@ export default function Home() {
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Real-time Tracking</h3>
             <p className="text-gray-600">
               Monitor payment status in real-time. See who has paid, 
-              who hasn't, and get notified when all payments are complete.
+              who hasn&apos;t, and get notified when all payments are complete.
             </p>
           </div>
         </div>
