@@ -16,6 +16,8 @@ export default function CreateCollection() {
     numPayers: 2,
     payerNames: ['', ''],
     payerEmails: ['', ''],
+    payerAmounts: [0, 0], // Custom amounts for each payer
+    splitType: 'equal', // 'equal' or 'custom'
     creatorEmail: '',
     paymentMode: 'split', // 'split' or 'self-pay'
     paymentMethods: [],
@@ -108,7 +110,15 @@ export default function CreateCollection() {
         if (formData.paymentMode === 'self-pay') {
           return getRemainingAmount() === 0;
         }
-        return formData.payerNames.every(name => name.trim());
+        if (formData.paymentMode === 'split') {
+          const namesValid = formData.payerNames.every(name => name.trim());
+          if (formData.splitType === 'custom') {
+            const amountsValid = Math.abs(getCustomRemainingAmount()) < 0.01; // Allow small rounding differences
+            return namesValid && amountsValid;
+          }
+          return namesValid;
+        }
+        return true;
       case 3:
         return true;
       default:
@@ -137,13 +147,63 @@ export default function CreateCollection() {
     const num = parseInt(e.target.value) || 2;
     const newNames = Array.from({ length: num }, (_, i) => formData.payerNames[i] || `Payer ${i + 1}`);
     const newEmails = Array.from({ length: num }, (_, i) => formData.payerEmails[i] || '');
+    const newAmounts = Array.from({ length: num }, (_, i) => formData.payerAmounts[i] || 0);
     
     setFormData(prev => ({
       ...prev,
       numPayers: num,
       payerNames: newNames,
-      payerEmails: newEmails
+      payerEmails: newEmails,
+      payerAmounts: newAmounts
     }));
+  };
+
+  const handleSplitTypeChange = (type) => {
+    setFormData(prev => ({
+      ...prev,
+      splitType: type,
+      payerAmounts: type === 'equal' ? 
+        Array.from({ length: prev.numPayers }, () => 0) : 
+        prev.payerAmounts
+    }));
+  };
+
+  const handlePayerAmountChange = (index, amount) => {
+    const newAmounts = [...formData.payerAmounts];
+    newAmounts[index] = parseFloat(amount) || 0;
+    setFormData(prev => ({
+      ...prev,
+      payerAmounts: newAmounts
+    }));
+  };
+
+  const getEqualAmount = () => {
+    return formData.totalAmount ? parseFloat(formData.totalAmount) / formData.numPayers : 0;
+  };
+
+  const getCustomTotal = () => {
+    return formData.payerAmounts.reduce((sum, amount) => sum + amount, 0);
+  };
+
+  const getCustomRemainingAmount = () => {
+    const total = parseFloat(formData.totalAmount) || 0;
+    const customTotal = getCustomTotal();
+    return total - customTotal;
+  };
+
+  const autoFillRemainingCustom = () => {
+    const remaining = getCustomRemainingAmount();
+    if (remaining > 0) {
+      const newAmounts = [...formData.payerAmounts];
+      const firstEmptyIndex = newAmounts.findIndex(amount => amount === 0);
+      if (firstEmptyIndex !== -1) {
+        newAmounts[firstEmptyIndex] = remaining;
+        setFormData(prev => ({
+          ...prev,
+          payerAmounts: newAmounts
+        }));
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -168,6 +228,9 @@ export default function CreateCollection() {
          body: JSON.stringify({
            ...formData,
            totalAmount: Math.round(parseFloat(formData.totalAmount) * 100), // Convert to paise
+           payerAmounts: formData.splitType === 'custom' ? 
+             formData.payerAmounts.map(amount => Math.round(amount * 100)) : 
+             null,
            paymentMode: formData.paymentMode,
            allocations: formData.paymentMode === 'self-pay' ? Object.fromEntries(
              Object.entries(formData.allocations).map(([key, value]) => [key, Math.round(value * 100)])
@@ -547,16 +610,58 @@ export default function CreateCollection() {
                       {formData.paymentMode === 'split' && (
                         <div className="space-y-4">
                           <h4 className="text-lg font-semibold text-gray-900">Add People</h4>
+                          
+                          {/* Split Type Selection */}
+                          <div className="space-y-3">
+                            <h5 className="text-md font-medium text-gray-700">How would you like to split the amount?</h5>
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
+                                type="button"
+                                onClick={() => handleSplitTypeChange('equal')}
+                                className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                                  formData.splitType === 'equal'
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                                }`}
+                              >
+                                <div className="text-center">
+                                  <div className="text-2xl mb-1">⚖️</div>
+                                  <div className="font-medium">Equal Split</div>
+                                  <div className="text-xs opacity-75">Divide equally</div>
+                                </div>
+                              </button>
+                              
+                              <button
+                                type="button"
+                                onClick={() => handleSplitTypeChange('custom')}
+                                className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                                  formData.splitType === 'custom'
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                                }`}
+                              >
+                                <div className="text-center">
+                                  <div className="text-2xl mb-1">✏️</div>
+                                  <div className="font-medium">Custom Split</div>
+                                  <div className="text-xs opacity-75">Set custom amounts</div>
+                                </div>
+                              </button>
+                            </div>
+                          </div>
+
                           <div className="space-y-3">
                             {Array.from({ length: formData.numPayers }).map((_, index) => (
                               <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                                  <div className="flex items-center justify-between mb-3">
                                    <h5 className="font-medium text-gray-900">Person {index + 1}</h5>
                                    <span className="text-base font-bold text-gray-900">
-                                     {formData.totalAmount ? formatRupeeAmount(parseFloat(formData.totalAmount) / formData.numPayers) : '₹0.00'}
+                                     {formData.splitType === 'equal' 
+                                       ? (formData.totalAmount ? formatRupeeAmount(parseFloat(formData.totalAmount) / formData.numPayers) : '₹0.00')
+                                       : formatRupeeAmount(formData.payerAmounts[index] || 0)
+                                     }
                                    </span>
                                  </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className={`grid gap-3 ${formData.splitType === 'custom' ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}>
                                    <input
                                      type="text"
                                      value={formData.payerNames[index] || ''}
@@ -571,10 +676,72 @@ export default function CreateCollection() {
                                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium placeholder-gray-400 bg-white"
                                      placeholder="Email (optional)"
                                    />
+                                   {formData.splitType === 'custom' && (
+                                     <div className="relative">
+                                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                         <span className="text-gray-600 font-medium">₹</span>
+                                       </div>
+                                       <input
+                                         type="number"
+                                         value={formData.payerAmounts[index] || ''}
+                                         onChange={(e) => handlePayerAmountChange(index, e.target.value)}
+                                         className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium placeholder-gray-400 bg-white"
+                                         placeholder="0.00"
+                                         min="0"
+                                         step="0.01"
+                                         max={formData.totalAmount || 0}
+                                       />
+                                     </div>
+                                   )}
                                 </div>
                               </div>
                             ))}
                           </div>
+
+                          {/* Custom Split Summary */}
+                          {formData.splitType === 'custom' && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h5 className="font-semibold text-blue-900">Split Summary</h5>
+                                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  Math.abs(getCustomRemainingAmount()) < 0.01 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {Math.abs(getCustomRemainingAmount()) < 0.01 ? '✓ Complete' : 'Incomplete'}
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-3 gap-4 text-center">
+                                <div>
+                                  <div className="text-lg font-bold text-blue-900">{formatRupeeAmount(getCustomTotal())}</div>
+                                  <div className="text-sm font-semibold text-blue-700">Allocated</div>
+                                </div>
+                                <div>
+                                  <div className={`text-lg font-bold ${Math.abs(getCustomRemainingAmount()) < 0.01 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {formatRupeeAmount(getCustomRemainingAmount())}
+                                  </div>
+                                  <div className="text-sm font-semibold text-blue-700">Remaining</div>
+                                </div>
+                                <div>
+                                  <div className="text-lg font-bold text-blue-900">{formatRupeeAmount(formData.totalAmount)}</div>
+                                  <div className="text-sm font-semibold text-blue-700">Total</div>
+                                </div>
+                              </div>
+                              
+                              {Math.abs(getCustomRemainingAmount()) > 0.01 && (
+                                <div className="mt-3 pt-3 border-t border-blue-200">
+                                  <button
+                                    type="button"
+                                    onClick={autoFillRemainingCustom}
+                                    className="w-full px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                                  >
+                                    Auto-fill remaining {formatRupeeAmount(getCustomRemainingAmount())}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

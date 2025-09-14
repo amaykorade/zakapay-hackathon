@@ -10,14 +10,31 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.env.backup
 
 # Next.js
 .next/
 out/
 build/
 
-# Production
-dist/
+# Vercel
+.vercel
+
+# Prisma
+prisma/migrations/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
 
 # Runtime data
 pids
@@ -73,28 +90,3 @@ jspm_packages/
 
 # TernJS port file
 .tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Logs
-logs
-*.log
-
-# Prisma
-prisma/migrations/

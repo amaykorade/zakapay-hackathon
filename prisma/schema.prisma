@@ -114,6 +114,7 @@ enum CollectionStatus {
 enum PayerStatus {
   UNPAID
   PAID
+  CANCELLED
   REFUNDED
 }
 

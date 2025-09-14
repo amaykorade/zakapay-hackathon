@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import PayoutDashboard from '../../components/PayoutDashboard';
+import Toast from '../../components/Toast';
 
 export default function Dashboard() {
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
+  const [toast, setToast] = useState({ show: false, message: '' });
 
   useEffect(() => {
     fetchCollections();
@@ -32,11 +35,55 @@ export default function Dashboard() {
     return `₹${(paise / 100).toFixed(2)}`;
   };
 
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setToast({ show: true, message: 'Link copied!' });
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+      setToast({ show: true, message: 'Failed to copy link' });
+    }
+  };
+
+  const closeToast = () => {
+    setToast({ show: false, message: '' });
+  };
+
+  const cancelPayment = async (payerId, collectionId) => {
+    // Add confirmation dialog
+    if (!confirm('Are you sure you want to cancel this payment? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/payments/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ payerId, collectionId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to cancel payment');
+      }
+
+      setToast({ show: true, message: 'Payment cancelled successfully' });
+      fetchCollections(); // Refresh the collections
+    } catch (err) {
+      console.error('Error cancelling payment:', err);
+      setToast({ show: true, message: 'Failed to cancel payment' });
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'COMPLETED': return 'bg-green-100 text-green-800 border-green-200';
       case 'PARTIAL': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'PENDING': return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'UNPAID': return 'bg-gray-100 text-gray-800 border-gray-200';
       case 'CANCELLED': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -47,6 +94,7 @@ export default function Dashboard() {
       case 'COMPLETED': return '✅';
       case 'PARTIAL': return '⏳';
       case 'PENDING': return '⏸️';
+      case 'UNPAID': return '⏸️';
       case 'CANCELLED': return '❌';
       default: return '⏸️';
     }
@@ -112,12 +160,14 @@ export default function Dashboard() {
                   <span className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${
                     link.status === 'PAID' 
                       ? 'bg-green-100 text-green-700' 
+                      : link.status === 'CANCELLED'
+                      ? 'bg-red-100 text-red-700'
                       : 'bg-gray-100 text-gray-600'
                   }`}>
                     {link.status}
                   </span>
                   <button
-                    onClick={() => navigator.clipboard.writeText(link.link)}
+                    onClick={() => copyToClipboard(link.link)}
                     className="text-gray-400 hover:text-gray-600 p-0.5 rounded transition-colors"
                     title="Copy link"
                   >
@@ -125,6 +175,18 @@ export default function Dashboard() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
                   </button>
+                  {link.status === 'UNPAID' && (
+                    <button
+                      onClick={() => cancelPayment(link.payerId, collection.id)}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded text-xs font-medium transition-all duration-200 flex items-center space-x-1"
+                      title="Cancel payment"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <span>Cancel</span>
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -179,7 +241,8 @@ export default function Dashboard() {
     { id: 'pending', label: 'Pending', count: collections.filter(c => c.status === 'PENDING').length, icon: '⏳', color: 'gray' },
     { id: 'partial', label: 'Partial', count: collections.filter(c => c.status === 'PARTIAL').length, icon: '⚡', color: 'yellow' },
     { id: 'completed', label: 'Completed', count: collections.filter(c => c.status === 'COMPLETED').length, icon: '✅', color: 'green' },
-    { id: 'cancelled', label: 'Cancelled', count: collections.filter(c => c.status === 'CANCELLED').length, icon: '❌', color: 'red' }
+    { id: 'cancelled', label: 'Cancelled', count: collections.filter(c => c.status === 'CANCELLED').length, icon: '❌', color: 'red' },
+    { id: 'payouts', label: 'Payouts', count: 0, icon: '💰', color: 'blue' }
   ];
 
   if (loading) {
@@ -351,7 +414,9 @@ export default function Dashboard() {
 
             {/* Tab Content */}
             <div>
-              {getFilteredCollections().length === 0 ? (
+              {activeTab === 'payouts' ? (
+                <PayoutDashboard />
+              ) : getFilteredCollections().length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -390,6 +455,13 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+      
+      {/* Toast Notification */}
+      <Toast 
+        show={toast.show} 
+        message={toast.message} 
+        onClose={closeToast} 
+      />
     </div>
   );
 }

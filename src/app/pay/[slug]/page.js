@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
+import Toast from '../../../components/Toast';
 
 export default function PaymentPage() {
   const params = useParams();
@@ -13,6 +14,7 @@ export default function PaymentPage() {
   const [paymentMode, setPaymentMode] = useState('single'); // 'single' or 'multi'
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [allocations, setAllocations] = useState({});
+  const [toast, setToast] = useState({ show: false, message: '' });
 
   useEffect(() => {
     if (params.slug) {
@@ -64,6 +66,52 @@ export default function PaymentPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setToast({ show: true, message: 'Link copied!' });
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+      setToast({ show: true, message: 'Failed to copy link' });
+    }
+  };
+
+  const closeToast = () => {
+    setToast({ show: false, message: '' });
+  };
+
+  const cancelPayment = async () => {
+    // Add confirmation dialog
+    if (!confirm('Are you sure you want to cancel this payment? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/payments/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          payerId: payer.id, 
+          collectionId: payer.collectionId 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to cancel payment');
+      }
+
+      setToast({ show: true, message: 'Payment cancelled successfully' });
+      setPaymentStatus('cancelled');
+    } catch (err) {
+      console.error('Error cancelling payment:', err);
+      setToast({ show: true, message: 'Failed to cancel payment' });
     }
   };
 
@@ -211,6 +259,21 @@ export default function PaymentPage() {
           <div className="bg-gradient-to-r from-gray-800 to-gray-700 px-6 py-4">
             <h2 className="text-xl font-bold text-white mb-1">{payer.collection.title}</h2>
             <p className="text-gray-200 text-sm">Payment Request</p>
+            
+            {/* Payment Status Indicator */}
+            <div className="mt-3 flex items-center justify-center">
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                payer.status === 'PAID' 
+                  ? 'bg-green-100 text-green-800' 
+                  : payer.status === 'CANCELLED'
+                  ? 'bg-red-100 text-red-800'
+                  : 'bg-yellow-100 text-yellow-800'
+              }`}>
+                {payer.status === 'PAID' ? '✓ Paid' : 
+                 payer.status === 'CANCELLED' ? '✗ Cancelled' : 
+                 '⏳ Pending'}
+              </span>
+            </div>
           </div>
 
           {/* Payment Details */}
@@ -469,24 +532,40 @@ export default function PaymentPage() {
 
                 {/* Payment Button */}
                 <div className="pt-6 border-t border-gray-200">
-                  <button
-                    onClick={handlePayment}
-                    disabled={paymentStatus === 'processing' || (paymentMode === 'multi' && getRemainingAmount() !== 0)}
-                    className="w-full bg-gradient-to-r from-gray-800 to-gray-700 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-gray-900 hover:to-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
-                  >
-                    {paymentStatus === 'processing' ? (
-                      <span className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
-                        Processing Payment...
-                      </span>
-                    ) : paymentStatus === 'success' ? (
-                      'Payment Successful!'
-                    ) : (
-                      `Pay ${formatAmount(payer.shareAmount)}`
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={handlePayment}
+                      disabled={paymentStatus === 'processing' || (paymentMode === 'multi' && getRemainingAmount() !== 0) || (payer && (payer.status === 'PAID' || payer.status === 'CANCELLED'))}
+                      className="flex-1 bg-gradient-to-r from-gray-800 to-gray-700 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-gray-900 hover:to-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                    >
+                      {paymentStatus === 'processing' ? (
+                        <span className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
+                          Processing Payment...
+                        </span>
+                      ) : paymentStatus === 'success' ? (
+                        'Payment Successful!'
+                      ) : paymentStatus === 'cancelled' || (payer && payer.status === 'CANCELLED') ? (
+                        'Payment Cancelled'
+                      ) : payer && payer.status === 'PAID' ? (
+                        'Payment Successful!'
+                      ) : (
+                        `Pay ${formatAmount(payer.shareAmount)}`
+                      )}
+                    </button>
+                    
+                    {(paymentStatus === 'pending' || (payer && payer.status === 'UNPAID')) && (
+                      <button
+                        onClick={cancelPayment}
+                        className="px-6 py-4 bg-red-500 text-white rounded-xl font-bold text-lg hover:bg-red-600 transition-all duration-200 shadow-lg hover:shadow-xl"
+                        title="Cancel this payment"
+                      >
+                        Cancel
+                      </button>
                     )}
-                  </button>
+                  </div>
 
-                  {paymentStatus === 'success' && (
+                  {(paymentStatus === 'success' || (payer && payer.status === 'PAID')) && (
                     <div className="mt-4 bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 rounded-xl p-6 text-center">
                       <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -495,6 +574,18 @@ export default function PaymentPage() {
                       </div>
                       <h3 className="text-xl font-bold text-green-800 mb-2">Payment Successful!</h3>
                       <p className="text-green-700 font-medium">Your payment has been processed successfully</p>
+                    </div>
+                  )}
+
+                  {(paymentStatus === 'cancelled' || (payer && payer.status === 'CANCELLED')) && (
+                    <div className="mt-4 bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-200 rounded-xl p-6 text-center">
+                      <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </div>
+                      <h3 className="text-xl font-bold text-red-800 mb-2">Payment Cancelled</h3>
+                      <p className="text-red-700 font-medium">This payment has been cancelled</p>
                     </div>
                   )}
 
@@ -513,6 +604,13 @@ export default function PaymentPage() {
           </div>
         </div>
       </div>
+      
+      {/* Toast Notification */}
+      <Toast 
+        show={toast.show} 
+        message={toast.message} 
+        onClose={closeToast} 
+      />
     </div>
   );
 }

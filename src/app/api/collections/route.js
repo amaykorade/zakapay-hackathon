@@ -46,6 +46,7 @@ export async function GET() {
       updatedAt: collection.updatedAt,
       creator: collection.creator,
       links: collection.payers.map(payer => ({
+        payerId: payer.id,
         name: payer.name,
         email: payer.email,
         shareAmount: payer.shareAmount,
@@ -70,6 +71,7 @@ export async function POST(req) {
       numPayers, 
       payerNames = [], 
       payerEmails = [], 
+      payerAmounts = [], // Custom amounts for each payer
       creatorEmail,
       paymentMode = 'split',
       allocations = {},
@@ -91,9 +93,26 @@ export async function POST(req) {
       return NextResponse.json({ error: 'numPayers must be integer between 1 and 100' }, { status: 400 });
     }
 
-    // Split equally; distribute remainder to first few
-    const baseShare = Math.floor(totalPaise / n);
-    const remainder = totalPaise % n;
+    // Calculate split amounts
+    let calculatedAmounts = [];
+    
+    if (payerAmounts && payerAmounts.length === n) {
+      // Custom split - use provided amounts
+      calculatedAmounts = payerAmounts.map(amount => Number(amount));
+      
+      // Validate that custom amounts sum to total
+      const customTotal = calculatedAmounts.reduce((sum, amount) => sum + amount, 0);
+      if (customTotal !== totalPaise) {
+        return NextResponse.json({ 
+          error: `Custom amounts (${customTotal}) must equal total amount (${totalPaise})` 
+        }, { status: 400 });
+      }
+    } else {
+      // Equal split - distribute remainder to first few
+      const baseShare = Math.floor(totalPaise / n);
+      const remainder = totalPaise % n;
+      calculatedAmounts = Array.from({ length: n }, (_, i) => baseShare + (i < remainder ? 1 : 0));
+    }
 
     const creator = creatorEmail
       ? await prisma.user.upsert({
@@ -186,7 +205,7 @@ export async function POST(req) {
       // Regular split payment mode
       payersData = await Promise.all(
         Array.from({ length: n }).map(async (_, i) => {
-          const share = baseShare + (i < remainder ? 1 : 0);
+          const share = calculatedAmounts[i];
           const name = payerNames[i] || `Payer ${i + 1}`;
           const email = payerEmails[i] || null;
           const slug = await createUniquePayerSlug();
@@ -213,6 +232,7 @@ export async function POST(req) {
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const links = collection.payers.map((p) => ({
+      payerId: p.id,
       name: p.name,
       email: p.email,
       shareAmount: p.shareAmount,
