@@ -8,9 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && next build",
-    "build:vercel": "prisma generate && next build",
-    "prebuild": "prisma generate"
+    "vercel-build": "rm -rf node_modules/.prisma && prisma generate && next build",
+    "build:vercel": "rm -rf node_modules/.prisma && prisma generate && next build",
+    "prebuild": "prisma generate",
+    "prisma:generate": "prisma generate"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",

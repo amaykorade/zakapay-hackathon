@@ -4,6 +4,10 @@ set -e
 echo "Installing dependencies..."
 npm install
 
+echo "Cleaning Prisma cache..."
+rm -rf node_modules/.prisma
+rm -rf node_modules/@prisma/client
+
 echo "Generating Prisma Client..."
 npx prisma generate
 
