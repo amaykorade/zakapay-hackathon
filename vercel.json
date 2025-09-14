@@ -1,4 +1,6 @@
 {
+  "buildCommand": "rm -rf node_modules/.prisma node_modules/@prisma/client && npx prisma generate && npm run build",
+  "installCommand": "npm install && npx prisma generate",
   "functions": {
     "src/app/api/**/*.js": {
       "maxDuration": 30
