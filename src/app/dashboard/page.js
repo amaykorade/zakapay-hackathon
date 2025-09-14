@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import PayoutDashboard from '../../components/PayoutDashboard';
 import Toast from '../../components/Toast';
+import AuthGuard from '../../components/AuthGuard';
 
 export default function Dashboard() {
   const [collections, setCollections] = useState([]);
@@ -269,13 +270,14 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
-          <p className="text-gray-600 text-lg">Manage your split payment collections</p>
-        </div>
+    <AuthGuard>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
+            <p className="text-gray-600 text-lg">Manage your split payment collections</p>
+          </div>
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
@@ -468,12 +470,13 @@ export default function Dashboard() {
         )}
       </div>
       
-      {/* Toast Notification */}
-      <Toast 
-        show={toast.show} 
-        message={toast.message} 
-        onClose={closeToast} 
-      />
-    </div>
+        {/* Toast Notification */}
+        <Toast 
+          show={toast.show} 
+          message={toast.message} 
+          onClose={closeToast} 
+        />
+      </div>
+    </AuthGuard>
   );
 }

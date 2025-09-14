@@ -25,9 +25,6 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/dashboard" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
-              Dashboard
-            </Link>
             <Link href="/create" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
               Create Payment
             </Link>
@@ -55,27 +52,16 @@ export default function Navbar() {
                 >
                   Create Payment
                 </Link>
-                <div className="flex items-center space-x-3">
-                  {session.user?.image && (
-                    <Image
-                      src={session.user.image}
-                      alt={session.user.name || 'User'}
-                      width={32}
-                      height={32}
-                      className="w-8 h-8 rounded-full"
-                    />
-                  )}
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-900">
-                      {session.user?.name || 'User'}
-                    </span>
-                    <button
-                      onClick={() => signOut()}
-                      className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
-                    >
-                      Sign out
-                    </button>
-                  </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-900">
+                    {session.user?.name || 'User'}
+                  </span>
+                  <button
+                    onClick={() => signOut()}
+                    className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    Sign out
+                  </button>
                 </div>
               </div>
             ) : (
@@ -124,13 +110,6 @@ export default function Navbar() {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-50 rounded-lg mt-2">
               <Link
-                href="/dashboard"
-                className="block px-3 py-2 text-gray-700 hover:text-gray-900 font-medium rounded-md hover:bg-gray-100"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Dashboard
-              </Link>
-              <Link
                 href="/create"
                 className="block px-3 py-2 text-gray-700 hover:text-gray-900 font-medium rounded-md hover:bg-gray-100"
                 onClick={() => setIsMenuOpen(false)}
@@ -169,22 +148,11 @@ export default function Navbar() {
                       Create Payment
                     </Link>
                     <div className="px-3 py-2 border-t border-gray-200">
-                      <div className="flex items-center space-x-3 mb-2">
-                        {session.user?.image && (
-                          <Image
-                            src={session.user.image}
-                            alt={session.user.name || 'User'}
-                            width={32}
-                            height={32}
-                            className="w-8 h-8 rounded-full"
-                          />
-                        )}
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {session.user?.name || 'User'}
-                          </p>
-                          <p className="text-xs text-gray-500">{session.user?.email}</p>
-                        </div>
+                      <div className="mb-2">
+                        <p className="text-sm font-medium text-gray-900">
+                          {session.user?.name || 'User'}
+                        </p>
+                        <p className="text-xs text-gray-500">{session.user?.email}</p>
                       </div>
                       <button
                         onClick={() => {
