@@ -5,6 +5,7 @@
     }
   },
   "env": {
-    "PRISMA_GENERATE_DATAPROXY": "true"
+    "PRISMA_GENERATE_DATAPROXY": "true",
+    "PRISMA_GENERATE_SKIP_AUTOINSTALL": "false"
   }
 }
